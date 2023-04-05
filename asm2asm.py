@@ -974,21 +974,15 @@ class Pcsp:
         self.out.append((self.pc - self.entry, self.sp))
         # sort by pc
         self.out.sort(key=lambda x: x[0])
-        # NOTICE: first pair {1, 0} to be compitable with golang
-        tmp = [(1, 0)]
+        tmp = []
         lpc, lsp = 0, -1
         for pc, sp in self.out:
             # sp changed, push new record
-            if pc != lpc and sp != lsp:
-                    tmp.append((pc, sp))
-            # sp unchanged, replace with the higher pc
-            if pc != lpc and sp == lsp:
-                if len(tmp) > 0:
-                    tmp.pop(-1)
+            if sp != lsp:
                 tmp.append((pc, sp))
-                
             lpc, lsp = pc, sp
         self.out = tmp
+
     
     def update(self, dpc: int, dsp: int):
         self.out.append((self.pc - self.entry, self.sp))
@@ -996,6 +990,7 @@ class Pcsp:
         self.sp += dsp
         if self.pc > self.maxpc:
             self.maxpc = self.pc
+
 
 class Prototype:
     args: List[Parameter]
@@ -2563,9 +2558,9 @@ def main():
             print('const (', file = fp)
             for name, pcsp in asm.code.funcs.items():
                 if pcsp is not None:
-                    # print(f'before {name} optimize {pcsp}')
+                    print(f'before {name} optimize {pcsp}')
                     pcsp.optimize()
-                    # print(f'after {name} optimize {pcsp}')
+                    print(f'after {name} optimize {pcsp}')
                     print(f'    _size_{name} = %d' % (pcsp.maxpc - pcsp.entry), file = fp)
             print(')', file = fp)
             
