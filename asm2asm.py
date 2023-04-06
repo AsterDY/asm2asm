@@ -1812,6 +1812,14 @@ class CodeSection:
                isinstance(ins.operands[0], Register) and \
                isinstance(ins.operands[1], Register) and \
                ins.operands[i].reg == 'rsp'
+               
+    @staticmethod
+    def _is_splea(ins: Instruction) -> bool:
+        return len(ins.operands) == 2                and \
+               isinstance(ins.operands[0], Memory) and \
+               isinstance(ins.operands[1], Register) and \
+               ins.operands[1].reg == 'rsp'          and \
+               ins.operands[0].base.reg == 'rbp'
 
     @staticmethod
     def _is_rjump(ins: Optional[Instr]) -> bool:
@@ -1998,9 +2006,13 @@ class CodeSection:
                 if cursp > maxsp:
                     maxsp = cursp
             
-            # update pcsp   
-            if pcsp:
-                pcsp.update(ins.size(pcsp.pc), diff)
+                # update pcsp   
+                if pcsp:
+                    # check `leaq $xx(%rbp), %rsp`, sp = 8 - disp
+                    if name == 'leaq' and self._is_splea(ins.instr):
+                        pcsp.update(ins.size(pcsp.pc), 8 - pcsp.sp - args[0].disp.val)
+                    else:
+                        pcsp.update(ins.size(pcsp.pc), diff)
 
         # trace successful
         return maxsp, close
