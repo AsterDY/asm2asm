@@ -979,6 +979,8 @@ class Pcsp:
         for pc, sp in self.out:
             # sp changed, push new record
             if sp != lsp:
+                if pc != 0 and pc == lpc:
+                    raise SyntaxError(f'different sp {lsp}-{sp} for same pc {pc}')
                 tmp.append((pc, sp))
             lpc, lsp = pc, sp
         self.out = tmp
@@ -2558,9 +2560,9 @@ def main():
             print('const (', file = fp)
             for name, pcsp in asm.code.funcs.items():
                 if pcsp is not None:
-                    print(f'before {name} optimize {pcsp}')
+                    # print(f'before {name} optimize {pcsp}')
                     pcsp.optimize()
-                    print(f'after {name} optimize {pcsp}')
+                    # print(f'after {name} optimize {pcsp}')
                     print(f'    _size_{name} = %d' % (pcsp.maxpc - pcsp.entry), file = fp)
             print(')', file = fp)
             
