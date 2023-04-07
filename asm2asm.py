@@ -2010,10 +2010,16 @@ class CodeSection:
                 if pcsp:
                     # check `leaq $xx(%rbp), %rsp`, sp = 8 - disp
                     if name == 'leaq' and self._is_splea(ins.instr):
-                        pcsp.update(ins.size(pcsp.pc), 8 - pcsp.sp - args[0].disp.val)
+                        pcsp.update(ins.size(0), 8 - pcsp.sp - args[0].disp.val)
                     else:
-                        pcsp.update(ins.size(pcsp.pc), diff)
-
+                        pcsp.update(ins.size(0), diff)
+                        
+                if close:
+                    return maxsp, close
+                
+        # store last pcsp 
+        if pcsp and len(bb.body)>0:
+            pcsp.update(bb.body[-1].size(0), 0)
         # trace successful
         return maxsp, close
 
@@ -2572,9 +2578,7 @@ def main():
             print('const (', file = fp)
             for name, pcsp in asm.code.funcs.items():
                 if pcsp is not None:
-                    # print(f'before {name} optimize {pcsp}')
                     pcsp.optimize()
-                    # print(f'after {name} optimize {pcsp}')
                     print(f'    _size_{name} = %d' % (pcsp.maxpc - pcsp.entry), file = fp)
             print(')', file = fp)
             
