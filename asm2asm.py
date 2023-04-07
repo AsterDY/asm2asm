@@ -1976,7 +1976,7 @@ class CodeSection:
         for ins in bb.body:
             diff = 0
             
-            if isinstance(ins, X86Instr):
+            if isinstance(ins, X86Instr) or isinstance(ins, BranchInstr):
                 name = ins.instr.mnemonic
                 args = ins.instr.operands
 
@@ -2013,14 +2013,15 @@ class CodeSection:
                         pcsp.update(ins.size(0), 8 - pcsp.sp - args[0].disp.val)
                     else:
                         pcsp.update(ins.size(0), diff)
-                        
+                      
+                # return pcsp to avoid store redundant pc  
                 if close:
                     return maxsp, close
                 
         # store last pcsp 
         if pcsp and len(bb.body)>0:
             pcsp.update(bb.body[-1].size(0), 0)
-        # trace successful
+            
         return maxsp, close
 
     def get(self, key: str) -> Optional[int]:
