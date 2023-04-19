@@ -972,16 +972,26 @@ class Pcsp:
     def optimize(self):
         # push the last record
         self.out.append((self.pc - self.entry, self.sp))
+        
         # sort by pc
         self.out.sort(key=lambda x: x[0])
+        
         tmp = []
         lpc, lsp = 0, -1
         for pc, sp in self.out:
-            # sp changed, push new record
+            
             if sp != lsp:
+                # sp changed, push new record
                 if pc != 0 and pc == lpc:
                     raise SyntaxError(f'different sp {lsp}-{sp} for same pc {pc}')
                 tmp.append((pc, sp))
+                
+            else:
+                 # sp unchanged, replace with the higher pc
+                if len(tmp) > 0:
+                    tmp.pop(-1)
+                tmp.append((pc, sp))
+                
             lpc, lsp = pc, sp
         self.out = tmp
 
